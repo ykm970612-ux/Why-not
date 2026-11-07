@@ -14,7 +14,7 @@ CONVERSION_RATE = 0.05
 def preprocess_rent(file_path, year, encoding="cp949"):
 
     # 파일이 없는경우 종료.
-    if not (PROCESSED_DIR / file_path).exists():
+    if not file_path.exists():
         raise FileNotFoundError(f"{file_path.name} 파일이 없습니다.")
 
     df = pd.read_csv(file_path, encoding=encoding, low_memory=False)
@@ -44,7 +44,7 @@ def preprocess_rent(file_path, year, encoding="cp949"):
     # 결측치 제거
     df_2 = df_2.dropna(subset=["자치구명", "임대면적", "보증금(만원)", "임대료(만원)"])
 
-    # 보증금 월 환산율 5%
+    # 보증금 연 환산율 5%
     df_2["환산월세_만원"] = (
         df_2["임대료(만원)"] + df_2["보증금(만원)"] * CONVERSION_RATE / 12
     )
