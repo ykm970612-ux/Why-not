@@ -13,6 +13,10 @@ CONVERSION_RATE = 0.05
 
 def preprocess_rent(file_path, year, encoding="cp949"):
 
+    # 파일이 없는경우 종료.
+    if not (PROCESSED_DIR / file_path).exists():
+        raise FileNotFoundError(f"{file_path.name} 파일이 없습니다.")
+
     df = pd.read_csv(file_path, encoding=encoding, low_memory=False)
 
     # 숫자형으로 변환.
@@ -85,7 +89,8 @@ def preprocess_rent(file_path, year, encoding="cp949"):
 
 
 def main():
-    # 결과 폴더 생성
+
+    # 결과 폴더 생성, 없으면 생성
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
     # 전처리
@@ -104,7 +109,7 @@ def main():
         PROCESSED_DIR / "rent_2021_2025_district.csv", index=False, encoding="utf-8-sig"
     )
 
-    print("전체 전처리 완료")
+    print("월세 데이터 전처리 완료")
 
 
 if __name__ == "__main__":
