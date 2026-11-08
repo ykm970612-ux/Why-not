@@ -139,6 +139,16 @@ def main():
         ["생활물가지수", "월평균_비교품목수"]
     ].round(2)
 
+    # 오류 검증
+    if yearly["자치구명"].nunique() != SEOUL_DISTRICT_COUNT:
+        raise ValueError("서울시 25개 자치구가 모두 포함되지 않았습니다.")
+
+    if not (yearly["분석월수"] == 12).all():
+        raise ValueError("일부 자치구의 12개월 데이터가 부족합니다.")
+
+    if yearly.isna().sum().sum() > 0:
+        raise ValueError("최종 결과에 결측치가 있습니다.")
+
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
     monthly.to_csv(
