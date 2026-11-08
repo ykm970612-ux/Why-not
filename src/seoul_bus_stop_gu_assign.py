@@ -99,7 +99,7 @@ def main():
         predicate="within"
     )
 
-    unmatched_mask = joined["자치구"].isna()
+    unmatched_mask = joined["자치구명"].isna()
     if unmatched_mask.any():
         boundary_points = points.loc[points["원본행번호"].isin(
             joined.loc[unmatched_mask, "원본행번호"]
