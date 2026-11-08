@@ -5,9 +5,9 @@ import pandas as pd
 
 # 사용할 자료 지정
 BASE_DIR = Path(__file__).resolve().parent
-STATION_CSV = BASE_DIR / "data/raw/subway_stations_2025_seoulmetro.csv"
-BOUNDARY_GEOJSON = BASE_DIR / "data/raw/seoul.geojson.json"
-OUTPUT_DIR = BASE_DIR / "data/preprocessed/서울시_지하철_전처리결과"
+STATION_CSV = "data/raw/subway_stations_2025_seoulmetro.csv"
+BOUNDARY_GEOJSON = "data/raw/seoul.geojson.json"
+OUTPUT_DIR = "data/preprocessed/서울시_지하철_전처리결과"
 
 REQUIRED_COLUMNS = ["역번호", "호선", "역명", "도로명주소"]
 
