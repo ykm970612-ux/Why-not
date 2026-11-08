@@ -89,14 +89,14 @@ seoul_total_result = seoul_total_youth.groupby("시점")["1인가구"].sum()
 
 #저장
 wide_df.to_csv(
-    "data/processed/youth_single_household_clean_2025.csv",
+    "data/processed/youth_single_household_clean_2021_2025.csv",
     index=False,
     encoding="utf-8-sig"
 )
 
 
 check_df = pd.read_csv(
-    "data/processed/youth_single_household_clean_2025.csv",
+    "data/processed/youth_single_household_clean_2021_2025.csv",
     encoding="utf-8-sig"
 )
 
