@@ -4,7 +4,7 @@ import re
 import pandas as pd
 
 # 사용할 자료 지정
-PROJECT_DIR = Path(__file__).resolve().parents[1]
+PROJECT_DIR = Path(__file__).resolve().parents[2]
 
 STATION_CSV = PROJECT_DIR / "data" / "raw" / "subway_stations_2025_seoulmetro.csv"
 

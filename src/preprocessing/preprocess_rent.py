@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 # 파일경로 생성.
-PROJECT_DIR = Path(__file__).resolve().parents[1]
+PROJECT_DIR = Path(__file__).resolve().parents[2]
 RAW_DIR = PROJECT_DIR / "data" / "raw"
 PROCESSED_DIR = PROJECT_DIR / "data" / "processed"
 

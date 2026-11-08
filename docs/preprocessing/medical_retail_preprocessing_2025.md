@@ -68,12 +68,12 @@ Downloads 원본(CP949)은 수정하지 않았다. `data/raw/`에는 **내용·�
 Python 3.12.9에서 실행했으며 외부 패키지·API 키는 필요 없다. 저장소 루트에서:
 
 ```powershell
-python src/healthnconv_preprocess_facilities.py
+python src/preprocessing/healthnconv_preprocess_facilities.py
 python -m unittest discover -s tests -p "*test_preprocess_facilities.py" -v
 ```
 
-Downloads의 CP949 파일을 직접 읽는 것도 가능하다(원본 변경 없음):
+다른 파일명을 사용해야 할 경우에도 프로젝트의 `data/raw/`에 보관한 뒤 상대경로로 지정한다:
 
 ```powershell
-python src/healthnconv_preprocess_facilities.py --medical-input "C:/Users/Buge7/Downloads/건강보험심사평가원_요양기관 개설 현황_20251231.csv" --retail-input "C:/Users/Buge7/Downloads/서울시 상권분석서비스(점포-자치구).csv"
+python src/preprocessing/healthnconv_preprocess_facilities.py --medical-input "data/raw/medical_facilities_2025_hira.csv" --retail-input "data/raw/retail_stores_2025_seoul.csv"
 ```

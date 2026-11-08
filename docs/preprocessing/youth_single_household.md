@@ -1,7 +1,7 @@
 - 2021·2023·2025년 원본 파일명:
-    2021년: youth_single_household_2021_kosis
-    2023년: youth_single_household_2023_kosis
-    2025년: youth_single_household_2025_kosis
+    2021년: youth_single_household_2021_kosis.csv
+    2023년: youth_single_household_2023_kosis.csv
+    2025년: youth_single_household_2025_kosis.csv
 
 - 분석대상:
     서울 25개 자치구, 20~39세
@@ -27,3 +27,9 @@
 - 최종 결과
     csv: youth_single_household_clean_2021_2025.csv
     인코딩: utf-8-sig
+
+- 실행 방법
+
+```text
+python src/preprocessing/youth_single_household.py
+```

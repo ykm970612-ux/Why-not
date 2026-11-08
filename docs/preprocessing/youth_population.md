@@ -22,10 +22,10 @@
     7. 연도별 컬럼명에 _2021, _2023, _2025를 붙였다.
     8. 자치구명을 기준으로 3개 연도 데이터를 병합했다.
     
-    전처리 코드는 src/youth_population.py에 있다.
+    전처리 코드는 src/preprocessing/youth_population.py에 있다.
 
 3. 최종 데이터
-- 파일: data/processed/youth_population_clean_2021_2025.csv
+- 파일: data/processed/youth_population_2021_2025.csv
 - 인코딩: utf-8-sig
 - 크기: 25행 × 7열
 - 기준 컬럼: 자치구명
@@ -44,3 +44,9 @@ CSV를 다시 읽으면 자치구명 자료형이 object에서 str로 바뀌어�
 청년 인구는 행정안전부 주민등록 거주자 기준이고, 청년 1인 가구는 KOSIS 인구총조사 기준입니다. 자료 기준이 달라서 나중에 두 데이터를 합쳐 비율을 계산할 때는 주의해야 함
 
 원본 자료의 정확한 기준일은 별도로 확인해야 할 것 같습니다.
+
+6. 실행 방법
+
+```text
+python src/preprocessing/youth_population.py
+```
