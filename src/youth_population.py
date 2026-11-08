@@ -206,13 +206,13 @@ print(final_df.shape)
 
 #파일로 저장
 final_df.to_csv(
-    "data/processed/youth_population_clean.csv",
+    "data/processed/youth_population_2021_2025.csv",
     index=False,
     encoding="utf-8-sig"
 )
 
 check_df = pd.read_csv(
-    "data/processed/youth_population_clean.csv",
+    "data/processed/youth_population_2021_2025.csv",
     encoding="utf-8-sig"
 )
 
