@@ -36,7 +36,7 @@ def load_gu_boundary(path: Path):
         raise ValueError(f"경계 GeoJSON에서 자치구가 25개가 아닙니다. 현재 {len(boundary)}개")
     if boundary["자치구명"].duplicated().any():
         raise ValueError("경계 GeoJSON에 중복 자치구명이 있습니다.")
-    return boundary, geo.get("base")
+    return boundary, geo.get("base", features[0].get("properties", {}).get("base") if features else None)
 
 def extract_gu(address):
     if pd.isna(address):
@@ -63,7 +63,7 @@ def main():
         if not p.exists():
             raise FileNotFoundError(
                 f"입력 파일을 찾을 수 없습니다: {p}\n"
-                "CSV, GeoJSON, 이 파이썬 파일을 같은 폴더에 두세요."
+                "입력 파일을 data/raw 폴더에 배치하세요."
             )
 
     boundary, boundary_base = load_gu_boundary(BOUNDARY_GEOJSON)
@@ -110,7 +110,7 @@ def main():
             "원자료행수": len(group),
             "환승역여부": "예" if group["호선"].nunique() > 1 else "아니오",
         })
-    physical = pd.DataFrame(physical_rows)
+    physical = pd.DataFrame(physical_rows, columns=["자치구명", "자치구코드", "역명", "역명_정규화", "노선수", "노선목록", "역번호목록", "주소", "원자료행수", "환승역여부"])
 
     #자치구별 0건도 포함 출력
     gu_summary = boundary[["자치구명", "자치구코드"]].copy()
@@ -139,6 +139,7 @@ def main():
 
     unmatched = df[df["분류상태"] != "정상"].copy()
     duplicates = df[df.duplicated(subset=["역번호", "호선", "역명"], keep=False)].copy()
+    full_duplicates = df[df.duplicated(subset=read_csv_auto(STATION_CSV).columns.tolist(), keep=False)].copy()
 
     # 저장
     df.to_csv(OUTPUT_DIR / "지하철역_노선별_자치구분류.csv", index=False, encoding="utf-8-sig")
@@ -154,9 +155,12 @@ def main():
         unmatched.to_excel(writer, sheet_name="미분류_검토", index=False)
         review.to_excel(writer, sheet_name="동일역명_다른구_검토", index=False)
         duplicates.to_excel(writer, sheet_name="원자료중복_검토", index=False)
+        full_duplicates.to_excel(writer, sheet_name="전체행중복_검토", index=False)
 
     report = {
         "경계기준일": boundary_base,
+        "역번호_호선_역명_중복행수": int(len(duplicates)),
+        "원자료_전체행중복행수": int(len(full_duplicates)),
         "경계_자치구수": int(len(boundary)),
         "원자료_행수": int(len(df)),
         "정상분류_노선별_행수": int((df["분류상태"] == "정상").sum()),

@@ -58,6 +58,9 @@ def main():
     if districts.geometry.is_empty.any() or districts.geometry.isna().any():
         raise ValueError("경계 파일에 비어 있거나 누락된 geometry가 있습니다.")
 
+    if not districts.geometry.is_valid.all():
+        raise ValueError("유효하지 않은 자치구 geometry가 있습니다.")
+
     # 버스정류소 파일 읽기
     if bus_path.suffix.lower() in [".xlsx", ".xls"]:
         bus = pd.read_excel(bus_path, sheet_name=args.sheet)
@@ -128,7 +131,29 @@ def main():
     )
     matched = joined.loc[joined["자치구명"].notna()].copy()
     unmatched = joined.loc[joined["자치구명"].isna()].copy()
+    # 중복 후보 확인: 원자료 삭제 없이 별도 저장
+    id_checks = {}
+    for col in ("NODE_ID", "ARS_ID"):
+        if col in bus.columns:
+            id_checks[f"{col}_중복행수"] = int(
+                bus.duplicated(subset=[col], keep=False).sum()
+            )
 
+    full_duplicate_count = int(
+        bus.drop(columns=["원본행번호"]).duplicated(keep=False).sum()
+    )
+
+    name_col_bus = find_col(bus.columns, ["정류소명"])
+    duplicate_candidates = (
+        bus[
+            bus.duplicated(
+                subset=[name_col_bus, x_col, y_col],
+                keep=False
+            )
+        ].copy()
+        if name_col_bus
+        else bus.iloc[0:0].copy()
+    )
     # 자치구별 집계 작업
     counts = matched.groupby(["자치구코드", "자치구명"]).size().rename("정류소수").reset_index()
     summary = districts[["자치구코드", "자치구명"]].merge(
@@ -147,12 +172,14 @@ def main():
     summary.to_csv(outdir / "자치구별_버스정류소_집계.csv", index=False, encoding="utf-8-sig")
     unmatched_detail.to_csv(outdir / "자치구_미분류_정류소.csv", index=False, encoding="utf-8-sig")
     invalid_detail.to_csv(outdir / "좌표오류_정류소.csv", index=False, encoding="utf-8-sig")
+    duplicate_candidates.to_csv(outdir / "정류소_중복후보.csv", index=False, encoding="utf-8-sig")
 
     with pd.ExcelWriter(outdir / "버스정류소_자치구별_전처리결과.xlsx", engine="openpyxl") as writer:
         detail.to_excel(writer, sheet_name="정류소별_분류", index=False)
         summary.to_excel(writer, sheet_name="자치구별_집계", index=False)
         unmatched_detail.to_excel(writer, sheet_name="자치구_미분류", index=False)
         invalid_detail.to_excel(writer, sheet_name="좌표오류", index=False)
+        duplicate_candidates.to_excel(writer, sheet_name="중복후보", index=False)
 
     if not matched.empty:
         matched[["원본행번호", "자치구코드", "자치구명", "geometry"]].to_file(
@@ -162,6 +189,9 @@ def main():
 
     report = {
         "경계_자치구수": int(len(districts)),
+        "원자료_전체행중복행수": full_duplicate_count,
+        "정류소명_좌표_중복후보행수": int(len(duplicate_candidates)),
+        **id_checks,
         "원본_정류소수": int(len(bus)),
         "좌표정상_정류소수": int(len(valid)),
         "좌표오류_정류소수": int(len(invalid)),
@@ -172,6 +202,8 @@ def main():
         "정류소파일": str(bus_path),
         "좌표계": "EPSG:4326 (경도/위도)"
     }
+
+    print(json.dumps(report, ensure_ascii=False, indent=2))
 
 if __name__ == "__main__":
     main()
