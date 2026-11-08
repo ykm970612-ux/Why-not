@@ -50,7 +50,7 @@ def main():
         raise ValueError(f"경계 파일에서 자치구 코드 컬럼을 찾지 못했습니다. 컬럼: {list(districts.columns)}")
 
     districts = districts[[code_col, name_col, "geometry"]].copy()
-    districts = districts.rename(columns={code_col: "자치구코드", name_col: "자치구"})
+    districts = districts.rename(columns={code_col: "자치구코드", name_col: "자치구명"})
     districts["자치구코드"] = districts["자치구코드"].astype(str).str.replace(r"\.0$", "", regex=True)
     districts = districts.drop_duplicates(subset=["자치구코드"])
     if len(districts) != 25:
@@ -116,8 +116,8 @@ def main():
                 boundary_join.sort_values(["원본행번호", "자치구코드"])
                 .drop_duplicates(subset=["원본행번호"], keep="first")
             )
-            replace_map = boundary_join.set_index("원본행번호")[["자치구코드", "자치구"]]
-            for col in ["자치구코드", "자치구"]:
+            replace_map = boundary_join.set_index("원본행번호")[["자치구코드", "자치구명"]]
+            for col in ["자치구코드", "자치구명"]:
                 joined.loc[unmatched_mask, col] = (
                     joined.loc[unmatched_mask, "원본행번호"].map(replace_map[col])
                 )
@@ -126,20 +126,20 @@ def main():
         joined.sort_values(["원본행번호", "자치구코드"])
         .drop_duplicates(subset=["원본행번호"], keep="first")
     )
-    matched = joined.loc[joined["자치구"].notna()].copy()
-    unmatched = joined.loc[joined["자치구"].isna()].copy()
+    matched = joined.loc[joined["자치구명"].notna()].copy()
+    unmatched = joined.loc[joined["자치구명"].isna()].copy()
 
     # 자치구별 집계 작업
-    counts = matched.groupby(["자치구코드", "자치구"]).size().rename("정류소수").reset_index()
-    summary = districts[["자치구코드", "자치구"]].merge(
-        counts, on=["자치구코드", "자치구"], how="left"
+    counts = matched.groupby(["자치구코드", "자치구명"]).size().rename("정류소수").reset_index()
+    summary = districts[["자치구코드", "자치구명"]].merge(
+        counts, on=["자치구코드", "자치구명"], how="left"
     )
     summary["정류소수"] = summary["정류소수"].fillna(0).astype(int)
     summary = summary.sort_values("자치구코드").reset_index(drop=True)
 
     # 결과 저장
     detail_cols = [c for c in bus.columns if c != "geometry"]
-    detail = pd.DataFrame(matched.drop(columns="geometry"))[detail_cols + ["자치구코드", "자치구"]]
+    detail = pd.DataFrame(matched.drop(columns="geometry"))[detail_cols + ["자치구코드", "자치구명"]]
     unmatched_detail = pd.DataFrame(unmatched.drop(columns="geometry"))[detail_cols]
     invalid_detail = invalid.copy()
 
@@ -155,7 +155,7 @@ def main():
         invalid_detail.to_excel(writer, sheet_name="좌표오류", index=False)
 
     if not matched.empty:
-        matched[["원본행번호", "자치구코드", "자치구", "geometry"]].to_file(
+        matched[["원본행번호", "자치구코드", "자치구명", "geometry"]].to_file(
             outdir / "버스정류소_자치구분류.geojson",
             driver="GeoJSON", encoding="utf-8"
         )
