@@ -25,7 +25,7 @@
     전처리 코드는 src/youth_population.py에 있다.
 
 3. 최종 데이터
-- 파일: data/processed/youth_population_clean.csv
+- 파일: data/processed/youth_population_clean_2021_2025.csv
 - 인코딩: utf-8-sig
 - 크기: 25행 × 7열
 - 기준 컬럼: 자치구명
