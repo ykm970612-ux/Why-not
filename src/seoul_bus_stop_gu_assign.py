@@ -20,7 +20,7 @@ def main():
                         help="자치구 경계 파일")
     parser.add_argument("--bus", default="data/raw/bus_stops_2025_seoul.csv",
                         help="전처리할 파일")
-    parser.add_argument("--outdir", default="data/process/output",
+    parser.add_argument("--outdir", default="data/process/서울시_버스_전처리결과",
                         help="아웃풋")
     parser.add_argument("--sheet", default=0, help="Excel 시트명 또는 번호")
     args = parser.parse_args()
