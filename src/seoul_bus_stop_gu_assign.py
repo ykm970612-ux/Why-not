@@ -16,12 +16,12 @@ def find_col(columns, candidates):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--boundary", default="seoul.geojson.json",
+    parser.add_argument("--boundary", default="data/raw/seoul.geojson.json",
                         help="자치구 경계 파일")
-    parser.add_argument("--bus", default="bus_stops_2025_seoul.csv",
+    parser.add_argument("--bus", default="data/raw/bus_stops_2025_seoul.csv",
                         help="전처리할 파일")
-    parser.add_argument("--outdir", default="output.json",
-                        help="이웃풋")
+    parser.add_argument("--outdir", default="data/process/output",
+                        help="아웃풋")
     parser.add_argument("--sheet", default=0, help="Excel 시트명 또는 번호")
     args = parser.parse_args()
 
