@@ -20,6 +20,10 @@ MEDICAL_TYPES = (
     "한방병원", "한의원", "요양병원", "정신병원", "보건소", "보건지소",
     "보건진료소", "보건의료원", "조산원", "약국",
 )
+MEDICAL_INDICATORS = {
+    "일상의료시설수": ("의원", "치과의원", "약국"),
+    "종합의료시설수": ("상급종합병원", "종합병원", "병원"),
+}
 RETAIL_TYPES = {"CS300001": "슈퍼마켓", "CS300002": "편의점"}
 
 
@@ -97,18 +101,13 @@ def medical(rows):
         opened = date.fromisoformat(row["개설일자"].strip())
         require(opened <= date(2025, 12, 31), "2025년 이후 개설 의료기관 발견: 기준일 확인 필요")
         early_dates += opened < date(1950, 1, 1)
-        grouped[gu][kind + "수"] += 1
-        grouped[gu]["요양기관수"] += 1
-        grouped[gu]["2025년신규개설요양기관수"] += opened.year == 2025
+        grouped[gu][kind] += 1
     require(set(grouped) == set(DISTRICTS), "의료 자치구 누락")
     output = []
     for gu in DISTRICTS:
         row = {"자치구명": gu, "기준연도": 2025, "기준월": 12, "기준일": 31}
-        row.update({kind + "수": grouped[gu][kind + "수"] for kind in MEDICAL_TYPES})
-        row["요양기관수"] = grouped[gu]["요양기관수"]
-        row["약국제외요양기관수"] = row["요양기관수"] - row["약국수"]
-        row["2025년신규개설요양기관수"] = grouped[gu]["2025년신규개설요양기관수"]
-        require(sum(row[kind + "수"] for kind in MEDICAL_TYPES) == row["요양기관수"], "의료 종별 합계 불일치")
+        for indicator, kinds in MEDICAL_INDICATORS.items():
+            row[indicator] = sum(grouped[gu][kind] for kind in kinds)
         output.append(row)
     return output, {
         "seoul_rows": len(seoul), "missing_values": missing,
@@ -118,7 +117,8 @@ def medical(rows):
         "opening_dates_before_1950_retained": early_dates,
         "opening_date_min": min(r["개설일자"] for r in selected),
         "opening_date_max": max(r["개설일자"] for r in selected),
-        "total_facilities": sum(r["요양기관수"] for r in output),
+        "validated_snapshot_rows": len(selected),
+        "indicator_totals": {key: sum(r[key] for r in output) for key in MEDICAL_INDICATORS},
     }
 
 
@@ -188,11 +188,13 @@ def main():
         "year": 2025, "district_count": 25, "normalization": "사용자 요청으로 인구·면적 보정 제외",
         "medical": {"source": med_source, **med_audit},
         "retail": {"source": retail_source, **retail_audit},
-        "outliers_retained": {"medical": outliers(med, ["요양기관수", "약국수", "의원수"]),
+        "outliers_retained": {"medical": outliers(med, MEDICAL_INDICATORS),
                               "retail": outliers(stores, ["편의점수", "슈퍼마켓수", "생활편의시설수"])},
     }
     (args.output_dir / "facilities_validation_2025.json").write_text(json.dumps(audit, ensure_ascii=False, indent=2) + "\n", encoding="utf-8-sig")
-    print(f"완료: 의료 {len(med)}개 구 / {med_audit['total_facilities']:,}개, 생활편의 {len(stores)}개 구 / {retail_audit['total_stores']:,}개")
+    totals = med_audit["indicator_totals"]
+    print(f"완료: 의료 {len(med)}개 구 / 일상의료 {totals['일상의료시설수']:,}개 / "
+          f"종합의료 {totals['종합의료시설수']:,}개, 생활편의 {len(stores)}개 구 / {retail_audit['total_stores']:,}개")
 
 
 if __name__ == "__main__":

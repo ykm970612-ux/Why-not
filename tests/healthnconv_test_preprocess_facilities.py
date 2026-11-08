@@ -1,6 +1,6 @@
 import unittest
 
-from src.preprocess_facilities import DISTRICTS, count, medical, retail
+from src.healthnconv_preprocess_facilities import DISTRICTS, count, medical, retail
 
 
 def medical_rows():
@@ -23,10 +23,18 @@ class FacilityTests(unittest.TestCase):
         rows[1]["암호화된요양기호"] = rows[0]["암호화된요양기호"]
         rows[1]["개설일자"] = "2025-12-31"
         result, audit = medical(rows + [rows[0].copy()])
-        self.assertEqual(sum(r["요양기관수"] for r in result), 25)
-        self.assertEqual(sum(r["2025년신규개설요양기관수"] for r in result), 1)
+        self.assertEqual(sum(r["일상의료시설수"] for r in result), 25)
+        self.assertEqual(sum(r["종합의료시설수"] for r in result), 0)
         self.assertEqual(audit["exact_duplicates_removed"], 1)
         self.assertEqual(audit["rows_in_conflicting_id_groups"], 2)
+
+    def test_medical_indicators_include_only_the_six_selected_types(self):
+        rows = medical_rows()
+        for kind in ("치과의원", "약국", "상급종합병원", "종합병원", "병원", "요양병원", "한의원", "조산원", "보건지소"):
+            rows.append({**rows[0], "요양종별": kind, "암호화된요양기호": f"extra-{kind}"})
+        result, _ = medical(rows)
+        self.assertEqual(result[0], {"자치구명": DISTRICTS[0], "기준연도": 2025, "기준월": 12, "기준일": 31,
+                                     "일상의료시설수": 3, "종합의료시설수": 3})
 
     def test_medical_rejects_future_and_missing_district(self):
         rows = medical_rows()
