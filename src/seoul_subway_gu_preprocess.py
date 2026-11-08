@@ -5,9 +5,9 @@ import pandas as pd
 
 # 사용할 자료 지정
 BASE_DIR = Path(__file__).resolve().parent
-STATION_CSV = BASE_DIR / "subway_stations_2025_seoulmetro.csv"
-BOUNDARY_GEOJSON = BASE_DIR / "seoul.geojson.json"
-OUTPUT_DIR = BASE_DIR / "서울시_지하철_전처리결과"
+STATION_CSV = BASE_DIR / "data/raw/subway_stations_2025_seoulmetro.csv"
+BOUNDARY_GEOJSON = BASE_DIR / "data/raw/seoul.geojson.json"
+OUTPUT_DIR = BASE_DIR / "data/preprocessed/서울시_지하철_전처리결과"
 
 REQUIRED_COLUMNS = ["역번호", "호선", "역명", "도로명주소"]
 
@@ -30,11 +30,11 @@ def load_gu_boundary(path: Path):
         name = props.get("name")
         code = props.get("code")
         if name and code:
-            rows.append({"자치구": str(name).strip(), "자치구코드": str(code).strip()})
+            rows.append({"자치구명": str(name).strip(), "자치구코드": str(code).strip()})
     boundary = pd.DataFrame(rows).drop_duplicates()
     if len(boundary) != 25:
         raise ValueError(f"경계 GeoJSON에서 자치구가 25개가 아닙니다. 현재 {len(boundary)}개")
-    if boundary["자치구"].duplicated().any():
+    if boundary["자치구명"].duplicated().any():
         raise ValueError("경계 GeoJSON에 중복 자치구명이 있습니다.")
     return boundary, geo.get("base")
 
@@ -67,7 +67,7 @@ def main():
             )
 
     boundary, boundary_base = load_gu_boundary(BOUNDARY_GEOJSON)
-    gu_names = set(boundary["자치구"])
+    gu_names = set(boundary["자치구명"])
 
     df = read_csv_auto(STATION_CSV)
     missing = [c for c in REQUIRED_COLUMNS if c not in df.columns]
@@ -78,15 +78,15 @@ def main():
     for col in REQUIRED_COLUMNS:
         df[col] = df[col].astype("string").str.strip()
 
-    df["주소에서_추출한_자치구"] = df["도로명주소"].apply(extract_gu)
-    df["자치구"] = df["주소에서_추출한_자치구"]
-    df["자치구코드"] = df["자치구"].map(
-        boundary.set_index("자치구")["자치구코드"].to_dict()
+    df["주소에서_추출한_자치구명"] = df["도로명주소"].apply(extract_gu)
+    df["자치구명"] = df["주소에서_추출한_자치구명"]
+    df["자치구코드"] = df["자치구명"].map(
+        boundary.set_index("자치구명")["자치구코드"].to_dict()
     )
     df["분류상태"] = "정상"
-    df.loc[df["주소에서_추출한_자치구"].isna(), "분류상태"] = "서울 외 지역 또는 주소에서 자치구 확인 불가"
+    df.loc[df["주소에서_추출한_자치구명"].isna(), "분류상태"] = "서울 외 지역 또는 주소에서 자치구 확인 불가"
     df.loc[
-        df["주소에서_추출한_자치구"].notna() & ~df["주소에서_추출한_자치구"].isin(gu_names),
+        df["주소에서_추출한_자치구명"].notna() & ~df["주소에서_추출한_자치구명"].isin(gu_names),
         "분류상태"
     ] = "경계 GeoJSON 자치구 목록과 불일치"
 
@@ -96,10 +96,10 @@ def main():
     #물리적 역 단위 : 같은 자치구 + 정규화 역명은 환승역으로 보고 1개로 집계
     valid = df[df["분류상태"] == "정상"].copy()
     physical_rows = []
-    for (gu, station), group in valid.groupby(["자치구", "역명_정규화"], dropna=False, sort=True):
+    for (gu, station), group in valid.groupby(["자치구명", "역명_정규화"], dropna=False, sort=True):
         first = group.iloc[0]
         physical_rows.append({
-            "자치구": gu,
+            "자치구명": gu,
             "자치구코드": first["자치구코드"],
             "역명": first["역명"],
             "역명_정규화": station,
@@ -113,29 +113,29 @@ def main():
     physical = pd.DataFrame(physical_rows)
 
     #자치구별 0건도 포함 출력
-    gu_summary = boundary[["자치구", "자치구코드"]].copy()
-    physical_counts = physical.groupby("자치구").size().rename("물리적_역수")
-    line_record_counts = valid.groupby("자치구").size().rename("노선별_역자료_행수")
+    gu_summary = boundary[["자치구명", "자치구코드"]].copy()
+    physical_counts = physical.groupby("자치구명").size().rename("물리적_역수")
+    line_record_counts = valid.groupby("자치구명").size().rename("노선별_역자료_행수")
     transfer_counts = (
-        physical[physical["환승역여부"] == "예"].groupby("자치구").size().rename("환승역수")
+        physical[physical["환승역여부"] == "예"].groupby("자치구명").size().rename("환승역수")
         if not physical.empty else pd.Series(dtype="int64", name="환승역수")
     )
-    gu_summary = gu_summary.merge(physical_counts, on="자치구", how="left")
-    gu_summary = gu_summary.merge(line_record_counts, on="자치구", how="left")
-    gu_summary = gu_summary.merge(transfer_counts, on="자치구", how="left")
+    gu_summary = gu_summary.merge(physical_counts, on="자치구명", how="left")
+    gu_summary = gu_summary.merge(line_record_counts, on="자치구명", how="left")
+    gu_summary = gu_summary.merge(transfer_counts, on="자치구명", how="left")
     for col in ("물리적_역수", "노선별_역자료_행수", "환승역수"):
         gu_summary[col] = gu_summary[col].fillna(0).astype(int)
 
     line_summary = (
-        valid.groupby(["자치구", "호선"]).size().reset_index(name="노선별_역자료_행수")
-        .sort_values(["자치구", "호선"])
+        valid.groupby(["자치구명", "호선"]).size().reset_index(name="노선별_역자료_행수")
+        .sort_values(["자치구명", "호선"])
     )
 
     cross_gu = (
-        valid.groupby("역명_정규화")["자치구"].nunique()
+        valid.groupby("역명_정규화")["자치구명"].nunique()
         .loc[lambda s: s > 1].index.tolist()
     )
-    review = valid[valid["역명_정규화"].isin(cross_gu)].sort_values(["역명_정규화", "자치구"])
+    review = valid[valid["역명_정규화"].isin(cross_gu)].sort_values(["역명_정규화", "자치구명"])
 
     unmatched = df[df["분류상태"] != "정상"].copy()
     duplicates = df[df.duplicated(subset=["역번호", "호선", "역명"], keep=False)].copy()
