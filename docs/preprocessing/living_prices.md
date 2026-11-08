@@ -5,7 +5,7 @@
 
 | 기준연도 | 원본 파일명 | 파일 형식 | 인코딩 | url |
 |---:|---|---|---|---|
-| 2025 | `living_prices_2025_seoul.csv` | `csv` | `cp949` | https://data.seoul.go.kr/dataList/OA-1170/S/1/\ndatasetView.do |
+| 2025 | `living_prices_2025_seoul.csv` | `csv` | `cp949` | https://data.seoul.go.kr/dataList/OA-1170/S/1/datasetView.do |
 
 
 ---
