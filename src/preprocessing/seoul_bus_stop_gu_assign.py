@@ -1,9 +1,11 @@
 from pathlib import Path
 import argparse
 import json
-import sys
 import pandas as pd
 import geopandas as gpd
+
+PROJECT_DIR = Path(__file__).resolve().parents[2]
+
 
 def find_col(columns, candidates):
     # 데이터 공백 제거 작업
@@ -14,20 +16,33 @@ def find_col(columns, candidates):
             return normalized[key]
     return None
 
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--boundary", default="data/raw/seoul.geojson.json",
-                        help="자치구 경계 파일")
-    parser.add_argument("--bus", default="data/raw/bus_stops_2025_seoul.csv",
-                        help="전처리할 파일")
-    parser.add_argument("--outdir", default="data/processed/서울시_버스_전처리결과",
-                        help="아웃풋")
+    parser.add_argument(
+        "--boundary",
+        type=Path,
+        default=PROJECT_DIR / "data" / "raw" / "seoul.geojson.json",
+        help="자치구 경계 파일",
+    )
+    parser.add_argument(
+        "--bus",
+        type=Path,
+        default=PROJECT_DIR / "data" / "raw" / "bus_stops_2025_seoul.csv",
+        help="전처리할 파일",
+    )
+    parser.add_argument(
+        "--outdir",
+        type=Path,
+        default=PROJECT_DIR / "data" / "processed" / "서울시_버스_전처리결과",
+        help="결과 저장 폴더",
+    )
     parser.add_argument("--sheet", default=0, help="Excel 시트명 또는 번호")
     args = parser.parse_args()
 
-    boundary_path = Path(args.boundary)
-    bus_path = Path(args.bus)
-    outdir = Path(args.outdir)
+    boundary_path = args.boundary
+    bus_path = args.bus
+    outdir = args.outdir
     outdir.mkdir(parents=True, exist_ok=True)
 
     if not boundary_path.exists():
@@ -35,7 +50,7 @@ def main():
     if not bus_path.exists():
         raise FileNotFoundError(f"정류소 파일을 찾을 수 없습니다: {bus_path}")
 
-    #자치구 경계 읽기, 필수 속성 확인
+    # 자치구 경계 읽기, 필수 속성 확인
     districts = gpd.read_file(boundary_path)
     if districts.crs is None:
         districts = districts.set_crs("EPSG:4326")
@@ -45,16 +60,24 @@ def main():
     name_col = find_col(districts.columns, ["name", "SIG_KOR_NM", "자치구명"])
     code_col = find_col(districts.columns, ["code", "SIG_CD", "자치구코드"])
     if name_col is None:
-        raise ValueError(f"경계 파일에서 자치구명 컬럼을 찾지 못했습니다. 컬럼: {list(districts.columns)}")
+        raise ValueError(
+            f"경계 파일에서 자치구명 컬럼을 찾지 못했습니다. 컬럼: {list(districts.columns)}"
+        )
     if code_col is None:
-        raise ValueError(f"경계 파일에서 자치구 코드 컬럼을 찾지 못했습니다. 컬럼: {list(districts.columns)}")
+        raise ValueError(
+            f"경계 파일에서 자치구 코드 컬럼을 찾지 못했습니다. 컬럼: {list(districts.columns)}"
+        )
 
     districts = districts[[code_col, name_col, "geometry"]].copy()
     districts = districts.rename(columns={code_col: "자치구코드", name_col: "자치구명"})
-    districts["자치구코드"] = districts["자치구코드"].astype(str).str.replace(r"\.0$", "", regex=True)
+    districts["자치구코드"] = (
+        districts["자치구코드"].astype(str).str.replace(r"\.0$", "", regex=True)
+    )
     districts = districts.drop_duplicates(subset=["자치구코드"])
     if len(districts) != 25:
-        raise ValueError(f"자치구 경계가 25개가 아닙니다. 현재 {len(districts)}개입니다.")
+        raise ValueError(
+            f"자치구 경계가 25개가 아닙니다. 현재 {len(districts)}개입니다."
+        )
     if districts.geometry.is_empty.any() or districts.geometry.isna().any():
         raise ValueError("경계 파일에 비어 있거나 누락된 geometry가 있습니다.")
 
@@ -83,51 +106,38 @@ def main():
     bus[x_col] = pd.to_numeric(bus[x_col], errors="coerce")
     bus[y_col] = pd.to_numeric(bus[y_col], errors="coerce")
 
-    valid_mask = (
-        bus[x_col].between(124, 132) &
-        bus[y_col].between(33, 39)
-    )
+    valid_mask = bus[x_col].between(124, 132) & bus[y_col].between(33, 39)
     valid = bus.loc[valid_mask].copy()
     invalid = bus.loc[~valid_mask].copy()
     points = gpd.GeoDataFrame(
-        valid,
-        geometry=gpd.points_from_xy(valid[x_col], valid[y_col]),
-        crs="EPSG:4326"
+        valid, geometry=gpd.points_from_xy(valid[x_col], valid[y_col]), crs="EPSG:4326"
     )
 
-    joined = gpd.sjoin(
-        points,
-        districts,
-        how="left",
-        predicate="within"
-    )
+    joined = gpd.sjoin(points, districts, how="left", predicate="within")
 
     unmatched_mask = joined["자치구명"].isna()
     if unmatched_mask.any():
-        boundary_points = points.loc[points["원본행번호"].isin(
-            joined.loc[unmatched_mask, "원본행번호"]
-        )]
+        boundary_points = points.loc[
+            points["원본행번호"].isin(joined.loc[unmatched_mask, "원본행번호"])
+        ]
         if not boundary_points.empty:
             boundary_join = gpd.sjoin(
-                boundary_points,
-                districts,
-                how="left",
-                predicate="intersects"
+                boundary_points, districts, how="left", predicate="intersects"
             )
-            
-            boundary_join = (
-                boundary_join.sort_values(["원본행번호", "자치구코드"])
-                .drop_duplicates(subset=["원본행번호"], keep="first")
-            )
-            replace_map = boundary_join.set_index("원본행번호")[["자치구코드", "자치구명"]]
-            for col in ["자치구코드", "자치구명"]:
-                joined.loc[unmatched_mask, col] = (
-                    joined.loc[unmatched_mask, "원본행번호"].map(replace_map[col])
-                )
 
-    joined = (
-        joined.sort_values(["원본행번호", "자치구코드"])
-        .drop_duplicates(subset=["원본행번호"], keep="first")
+            boundary_join = boundary_join.sort_values(
+                ["원본행번호", "자치구코드"]
+            ).drop_duplicates(subset=["원본행번호"], keep="first")
+            replace_map = boundary_join.set_index("원본행번호")[
+                ["자치구코드", "자치구명"]
+            ]
+            for col in ["자치구코드", "자치구명"]:
+                joined.loc[unmatched_mask, col] = joined.loc[
+                    unmatched_mask, "원본행번호"
+                ].map(replace_map[col])
+
+    joined = joined.sort_values(["원본행번호", "자치구코드"]).drop_duplicates(
+        subset=["원본행번호"], keep="first"
     )
     matched = joined.loc[joined["자치구명"].notna()].copy()
     unmatched = joined.loc[joined["자치구명"].isna()].copy()
@@ -145,17 +155,17 @@ def main():
 
     name_col_bus = find_col(bus.columns, ["정류소명"])
     duplicate_candidates = (
-        bus[
-            bus.duplicated(
-                subset=[name_col_bus, x_col, y_col],
-                keep=False
-            )
-        ].copy()
+        bus[bus.duplicated(subset=[name_col_bus, x_col, y_col], keep=False)].copy()
         if name_col_bus
         else bus.iloc[0:0].copy()
     )
     # 자치구별 집계 작업
-    counts = matched.groupby(["자치구코드", "자치구명"]).size().rename("정류소수").reset_index()
+    counts = (
+        matched.groupby(["자치구코드", "자치구명"])
+        .size()
+        .rename("정류소수")
+        .reset_index()
+    )
     summary = districts[["자치구코드", "자치구명"]].merge(
         counts, on=["자치구코드", "자치구명"], how="left"
     )
@@ -164,17 +174,31 @@ def main():
 
     # 결과 저장
     detail_cols = [c for c in bus.columns if c != "geometry"]
-    detail = pd.DataFrame(matched.drop(columns="geometry"))[detail_cols + ["자치구코드", "자치구명"]]
+    detail = pd.DataFrame(matched.drop(columns="geometry"))[
+        detail_cols + ["자치구코드", "자치구명"]
+    ]
     unmatched_detail = pd.DataFrame(unmatched.drop(columns="geometry"))[detail_cols]
     invalid_detail = invalid.copy()
 
-    detail.to_csv(outdir / "버스정류소_자치구분류.csv", index=False, encoding="utf-8-sig")
-    summary.to_csv(outdir / "자치구별_버스정류소_집계.csv", index=False, encoding="utf-8-sig")
-    unmatched_detail.to_csv(outdir / "자치구_미분류_정류소.csv", index=False, encoding="utf-8-sig")
-    invalid_detail.to_csv(outdir / "좌표오류_정류소.csv", index=False, encoding="utf-8-sig")
-    duplicate_candidates.to_csv(outdir / "정류소_중복후보.csv", index=False, encoding="utf-8-sig")
+    detail.to_csv(
+        outdir / "버스정류소_자치구분류.csv", index=False, encoding="utf-8-sig"
+    )
+    summary.to_csv(
+        outdir / "자치구별_버스정류소_집계.csv", index=False, encoding="utf-8-sig"
+    )
+    unmatched_detail.to_csv(
+        outdir / "자치구_미분류_정류소.csv", index=False, encoding="utf-8-sig"
+    )
+    invalid_detail.to_csv(
+        outdir / "좌표오류_정류소.csv", index=False, encoding="utf-8-sig"
+    )
+    duplicate_candidates.to_csv(
+        outdir / "정류소_중복후보.csv", index=False, encoding="utf-8-sig"
+    )
 
-    with pd.ExcelWriter(outdir / "버스정류소_자치구별_전처리결과.xlsx", engine="openpyxl") as writer:
+    with pd.ExcelWriter(
+        outdir / "버스정류소_자치구별_전처리결과.xlsx", engine="openpyxl"
+    ) as writer:
         detail.to_excel(writer, sheet_name="정류소별_분류", index=False)
         summary.to_excel(writer, sheet_name="자치구별_집계", index=False)
         unmatched_detail.to_excel(writer, sheet_name="자치구_미분류", index=False)
@@ -183,8 +207,7 @@ def main():
 
     if not matched.empty:
         matched[["원본행번호", "자치구코드", "자치구명", "geometry"]].to_file(
-            outdir / "버스정류소_자치구분류.geojson",
-            driver="GeoJSON", encoding="utf-8"
+            outdir / "버스정류소_자치구분류.geojson", driver="GeoJSON", encoding="utf-8"
         )
 
     report = {
@@ -200,10 +223,11 @@ def main():
         "자치구별_집계합계": int(summary["정류소수"].sum()),
         "경계파일": str(boundary_path),
         "정류소파일": str(bus_path),
-        "좌표계": "EPSG:4326 (경도/위도)"
+        "좌표계": "EPSG:4326 (경도/위도)",
     }
 
     print(json.dumps(report, ensure_ascii=False, indent=2))
+
 
 if __name__ == "__main__":
     main()

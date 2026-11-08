@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-PROJECT_DIR = Path(__file__).resolve().parents[1]
+PROJECT_DIR = Path(__file__).resolve().parents[2]
 RAW_FILE = PROJECT_DIR / "data" / "raw" / "living_prices_2025_seoul.csv"
 PROCESSED_DIR = PROJECT_DIR / "data" / "processed"
 

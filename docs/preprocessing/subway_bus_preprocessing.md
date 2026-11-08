@@ -51,3 +51,12 @@
 | 지하철 물리적 역 그룹 | 240개(자치구명·공백 제거 역명 기준) |
 | 지하철 환승역 그룹 | 33개 |
 | 지하철 동일 역명·다른 자치구 검토 역명 | 2개 |
+
+## 5. 실행 방법
+
+저장소 최상위 폴더에서 실행한다.
+
+```text
+python src/preprocessing/seoul_bus_stop_gu_assign.py
+python src/preprocessing/seoul_subway_gu_preprocess.py
+```

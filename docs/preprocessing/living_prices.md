@@ -172,7 +172,7 @@
 ## 13. 실행 
 
 ```bash
-python src/preprocess_living_prices.py
+python src/preprocessing/preprocess_living_prices.py
 ```
 
 ---

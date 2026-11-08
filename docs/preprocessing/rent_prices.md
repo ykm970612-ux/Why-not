@@ -96,7 +96,7 @@
 ## 8. 실행 
 
 ```bash
-python src/preprocess_rent.py
+python src/preprocessing/preprocess_rent.py
 python src/analyze_rent_trend.py
 ```
 
