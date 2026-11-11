@@ -152,23 +152,6 @@ def main():
         data = load_district_data(file_path, columns, dataset_name)
         integrated = merge_one_to_one(integrated, data, dataset_name)
 
-    for year in (2021, 2023, 2025):
-        population_column = f"청년인구_{year}"
-        household_column = f"청년1인가구_{year}"
-        concentration_column = f"청년1인가구_청년인구대비비율_{year}_퍼센트"
-
-        if (integrated[population_column] <= 0).any():
-            raise ValueError(f"{year}년 청년 인구가 0 이하인 자치구가 있습니다.")
-
-        integrated[concentration_column] = (
-            integrated[household_column] / integrated[population_column] * 100
-        ).round(2)
-
-    integrated["청년집중도_변화_2021_2025_퍼센트포인트"] = (
-        integrated["청년1인가구_청년인구대비비율_2025_퍼센트"]
-        - integrated["청년1인가구_청년인구대비비율_2021_퍼센트"]
-    ).round(2)
-
     if len(integrated) != 25:
         raise ValueError(f"통합 결과가 25행이 아닙니다: {len(integrated)}행")
     if integrated["자치구명"].duplicated().any():
