@@ -96,16 +96,6 @@ def main():
             ],
         ),
         (
-            "청년 1인가구",
-            PROCESSED_DIR / "youth_single_household_clean_2021_2025.csv",
-            [
-                "자치구명",
-                "청년1인가구_2021",
-                "청년1인가구_2023",
-                "청년1인가구_2025",
-            ],
-        ),
-        (
             "환산월세 변화",
             PROCESSED_DIR / "rent_trend_2021_2025.csv",
             [
@@ -113,18 +103,13 @@ def main():
                 "환산월세_2021_만원",
                 "환산월세_2023_만원",
                 "환산월세_2025_만원",
-                "변화액_2021_2023_만원",
-                "변화율_2021_2023_퍼센트",
-                "변화액_2023_2025_만원",
-                "변화율_2023_2025_퍼센트",
-                "변화액_2021_2025_만원",
                 "변화율_2021_2025_퍼센트",
             ],
         ),
         (
             "생활물가",
             PROCESSED_DIR / "living_price_2025_district.csv",
-            ["자치구명", "생활물가지수", "분석월수", "월평균_비교품목수"],
+            ["자치구명", "생활물가지수"],
         ),
         (
             "버스정류소",
@@ -134,7 +119,7 @@ def main():
         (
             "지하철역",
             PROCESSED_DIR / "서울시_지하철_전처리결과" / "자치구별_지하철역_집계.csv",
-            ["자치구명", "물리적_역수", "환승역수"],
+            ["자치구명", "물리적_역수"],
         ),
         (
             "의료시설",
@@ -144,13 +129,15 @@ def main():
         (
             "생활편의시설",
             PROCESSED_DIR / "retail_stores_clean_2025.csv",
-            ["자치구명", "편의점수", "슈퍼마켓수", "생활편의시설수"],
+            ["자치구명", "생활편의시설수"],
         ),
     ]
 
     for dataset_name, file_path, columns in inputs:
         data = load_district_data(file_path, columns, dataset_name)
         integrated = merge_one_to_one(integrated, data, dataset_name)
+
+    integrated = integrated.rename(columns={"정류소수": "버스정류소수"})
 
     if len(integrated) != 25:
         raise ValueError(f"통합 결과가 25행이 아닙니다: {len(integrated)}행")
