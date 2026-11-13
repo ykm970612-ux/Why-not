@@ -4,7 +4,7 @@ import pandas as pd
 def add_minmax_columns(df: pd.DataFrame) -> pd.DataFrame:
     result = df.copy()
 
-    for column in ("정류소수", "물리적_역수"):
+    for column in ("버스정류소수", "물리적_역수"):
         if column not in result.columns:
             continue
 
