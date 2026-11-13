@@ -131,6 +131,19 @@ def main():
             PROCESSED_DIR / "retail_stores_clean_2025.csv",
             ["자치구명", "생활편의시설수"],
         ),
+        (
+            "청년 1인가구",
+            PROCESSED_DIR / "youth_single_household_clean_2021_2025.csv",
+            [
+                "자치구명",
+                "청년1인가구_2021",
+                "청년1인가구_2023",
+                "청년1인가구_2025",
+                "전체1인가구_2021",
+                "전체1인가구_2023",
+                "전체1인가구_2025",
+            ],
+        ),
     ]
 
     for dataset_name, file_path, columns in inputs:
