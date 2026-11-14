@@ -25,7 +25,7 @@ def add_youth_single_household_lq(df: pd.DataFrame) -> pd.DataFrame:
         else:
             result[f"청년1인가구_LQ_{year}_정규화"] = (
             (result[f"청년1인가구_LQ_{year}"]-min_val) / (max_val - min_val)
-            )
+            ).round(4)
         
     return result
 
