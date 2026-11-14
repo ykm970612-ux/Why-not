@@ -21,9 +21,9 @@ def add_youth_single_household_lq(df: pd.DataFrame) -> pd.DataFrame:
 
 
         if max_val == min_val: #값이 같을 경우 0으로 나누는 것 방지
-            result[f"청년1인가구_LQ_{year}_norm"] = 0.0
+            result[f"청년1인가구_LQ_{year}_정규화"] = 0.0
         else:
-            result[f"청년1인가구_LQ_{year}_norm"] = (
+            result[f"청년1인가구_LQ_{year}_정규화"] = (
             (result[f"청년1인가구_LQ_{year}"]-min_val) / (max_val - min_val)
             )
         
@@ -39,6 +39,6 @@ if __name__ == "__main__":
 
     print(result.head())
 
-#결측치 검사 (이상 없음)
-print(result.shape)
-print(result.isna().sum())
+    #결측치 검사 (이상 없음)
+    print(result.shape)
+    print(result.isna().sum())
