@@ -35,7 +35,7 @@ def add_youth_population_lq(df: pd.DataFrame) -> pd.DataFrame:
 
 if __name__ == "__main__":
     df = pd.read_csv(
-        "data/processed/youth_population_clean_2021_2025.csv",
+        "data/processed/youth_population_2021_2025.csv",
         encoding="utf-8-sig"
     )
 
@@ -47,5 +47,5 @@ if __name__ == "__main__":
     print(result.isna().sum())
     
     for year in [2021, 2023, 2025]:
-        col = f"청년인구_LQ_{year}_norm"
+        col = f"청년인구_LQ_{year}_정규화"
         print(year, result[col].min(), result[col].max())
