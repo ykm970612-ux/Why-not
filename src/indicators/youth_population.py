@@ -43,9 +43,9 @@ if __name__ == "__main__":
 
     print(result.filter(like="LQ").head())
 
-print(result.shape)
-print(result.isna().sum())
-
-for year in [2021, 2023, 2025]:
-    col = f"청년인구_LQ_{year}_norm"
-    print(year, result[col].min(), result[col].max())
+    print(result.shape)
+    print(result.isna().sum())
+    
+    for year in [2021, 2023, 2025]:
+        col = f"청년인구_LQ_{year}_norm"
+        print(year, result[col].min(), result[col].max())
