@@ -134,16 +134,18 @@ seoul_total_youth = seoul_total[seoul_total["연령별"].isin(ages)].copy()
 seoul_total_youth["1인가구"] = pd.to_numeric(seoul_total_youth["1인가구"])
 seoul_total_result = seoul_total_youth.groupby("시점")["1인가구"].sum()
 
-print("데이터 크기:", final_df.shape)
-print("결측치:", final_df.isnull().sum().sum())
-print("중복 자치구:", final_df["자치구명"].duplicated().sum())
 
-for year in [2021, 2023, 2025]:
-    invalid = (
-        final_df[f"청년1인가구_{year}"]
-        > final_df[f"전체1인가구_{year}"]
-    ).sum()
-    print(f"{year}년 이상치:", invalid)
+#결측치 확인 함 이상 없음
+# print("데이터 크기:", final_df.shape)
+# print("결측치:", final_df.isnull().sum().sum())
+# print("중복 자치구:", final_df["자치구명"].duplicated().sum())
+
+# for year in [2021, 2023, 2025]:
+#     invalid = (
+#         final_df[f"청년1인가구_{year}"]
+#         > final_df[f"전체1인가구_{year}"]
+#     ).sum()
+#     print(f"{year}년 이상치:", invalid)
 
 
 # 저장
