@@ -23,9 +23,9 @@ def add_youth_population_lq(df: pd.DataFrame) -> pd.DataFrame:
         max_val = result[col].max()
 
         if min_val == max_val: #분모가 0이 되는 상황 방지
-            result[f"청년인구_LQ_{year}_norm"] = 0.0
+            result[f"청년인구_LQ_{year}_정규화"] = 0.0
         else:
-            result[f"청년인구_LQ_{year}_norm"] = (
+            result[f"청년인구_LQ_{year}_정규화"] = (
                 (result[f"청년인구_LQ_{year}"]-min_val)/(max_val-min_val) 
             )
 
