@@ -35,7 +35,7 @@ def _minmax(values: pd.Series) -> pd.Series:
 
 
 def add_healthnconv_indicators(df: pd.DataFrame) -> pd.DataFrame:
-    """시설 수와 1㎢당 시설 수의 Min-Max 지표를 추가한 복사본을 반환한다."""
+    """시설 수를 1㎢당 시설 수로 바꾸고 밀도 정규화 열을 추가한 복사본을 반환한다."""
     columns = ("일상의료시설수", "종합의료시설수", "생활편의시설수")
     missing = [column for column in ("자치구명", *columns) if column not in df.columns]
     if missing:
@@ -46,16 +46,11 @@ def add_healthnconv_indicators(df: pd.DataFrame) -> pd.DataFrame:
     areas = names.map(_district_areas_km2())
     if areas.isna().any():
         raise ValueError(f"면적을 찾지 못한 자치구: {names[areas.isna()].tolist()}")
-    result["자치구면적_km2"] = areas
-
     for column in columns:
         values = pd.to_numeric(df[column])
         if values.empty or values.isna().any() or values.isin([float("inf"), float("-inf")]).any():
             raise ValueError(f"{column}에 정규화할 수 없는 값이 있습니다.")
-        result[f"{column}_정규화"] = _minmax(values)
-
         density = values / areas
-        density_column = f"{column}_km2당"
-        result[density_column] = density
-        result[f"{density_column}_정규화"] = _minmax(density)
+        result[column] = density
+        result[f"{column}_정규화"] = _minmax(density)
     return result
