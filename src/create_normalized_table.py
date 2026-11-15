@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from indicators.bus_subway_density import apply_density
 from indicators.bus_subway_minmax import add_minmax_columns
 from indicators.healthnconv_normalize_facilities import (
     add_healthnconv_indicators,
@@ -13,6 +14,8 @@ from indicators.youth_single_household import (
 )
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
+
+BOUNDARY_FILE = PROJECT_DIR / "data" / "raw" / "seoul.geojson.json"
 
 INPUT_FILE = PROJECT_DIR / "data" / "processed" / "seoul_youth_integrated_2025.csv"
 
@@ -59,7 +62,10 @@ def main():
     # 생활물가지수 정규화
     result = add_living_price_indicator(result)
 
-    # 버스정류소·지하철역 정규화
+    # 버스정류소·지하철역을 면적당 시설수로 변환
+    result = apply_density(result, BOUNDARY_FILE)
+
+    # 면적당 버스정류소·지하철역 정규화
     result = add_minmax_columns(result)
 
     # 의료·생활편의시설 정규화
