@@ -37,7 +37,7 @@ lq_cols = [col for col in normalized_df.columns if "LQ" in col]
 normalized_df = normalized_df.sort_values("자치구명")
 
 #작은 그래프 25칸(5*5) 생성
-fig, axes = plt.subplots(5, 5, figsize=(20, 20))
+fig, axes = plt.subplots(5, 5, figsize=(20, 20), sharey=True)
 #1차원으로 축소
 axes = axes.flatten()
 
