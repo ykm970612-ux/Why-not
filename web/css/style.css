@@ -1,0 +1,384 @@
+:root {
+  --bg: #fafafa;
+  --card: #ffffff;
+  --raised: #f4f4f5;
+  --hairline: rgba(23, 23, 23, 0.08);
+  --text: #171717;
+  --text-2: #525252;
+  --muted: #737373;
+
+  --green-ink: #1d5a37;
+  --map-stroke: #ffffff;
+
+  --radius-card: 16px;
+  --radius-control: 8px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+p,
+ol {
+  margin: 0;
+}
+
+.page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+/* Header */
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+h1 {
+  font-size: 28px;
+  line-height: 1.15;
+  font-weight: 500;
+}
+
+.subtitle {
+  margin-top: 8px;
+  color: var(--text-2);
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--raised);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+}
+
+.tab {
+  height: 36px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms var(--ease), color 150ms var(--ease), box-shadow 150ms var(--ease);
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab[aria-selected="true"] {
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px var(--hairline);
+}
+
+.tab:focus-visible,
+.rank-item:focus-visible {
+  outline: 2px solid var(--green-ink);
+  outline-offset: 2px;
+}
+
+/* Layout */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+.map-panel,
+.detail,
+.ranking {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+}
+
+/* Map */
+
+.map-panel {
+  padding: 24px;
+}
+
+.map-caption {
+  color: var(--text-2);
+}
+
+.map {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 640px;
+  margin-top: 16px;
+}
+
+.gu {
+  stroke: var(--map-stroke);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: fill 300ms var(--ease);
+}
+
+.gu-outline {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.gu-label {
+  font-size: 12px;
+  font-weight: 500;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  transition: fill 300ms var(--ease);
+}
+
+.gu-rank {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.legend-value {
+  white-space: nowrap;
+}
+
+.legend-bar {
+  flex: 0 1 240px;
+  height: 8px;
+  border-radius: 4px;
+}
+
+/* Side */
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detail {
+  padding: 20px;
+}
+
+.detail-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detail-name {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+}
+
+.detail-rank {
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-score {
+  margin-top: 12px;
+  font-size: 32px;
+  line-height: 1;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-score small {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.metric-list {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.metric {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.metric dt {
+  color: var(--text-2);
+}
+
+.metric dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.metric dd span {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.ranking {
+  padding: 20px 12px 12px;
+}
+
+.section-title {
+  padding: 0 8px 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.rank-list {
+  list-style: none;
+  padding: 0;
+}
+
+.rank-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  display: grid;
+  grid-template-columns: 24px 64px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: background-color 150ms var(--ease);
+}
+
+.rank-item:hover,
+.rank-item.is-active {
+  background: var(--raised);
+}
+
+.rank-num,
+.rank-value {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-value {
+  color: var(--text);
+  text-align: right;
+}
+
+.rank-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--raised);
+  overflow: hidden;
+}
+
+.rank-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  transform-origin: left;
+  transition: transform 300ms var(--ease), background-color 300ms var(--ease);
+}
+
+/* Small screens */
+
+@media (max-width: 960px) {
+  .page {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tabs {
+    align-self: stretch;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 0 8px;
+  }
+
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .map-panel {
+    padding: 16px;
+  }
+
+  .gu-rank {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 22px;
+  }
+
+  .gu-label {
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
