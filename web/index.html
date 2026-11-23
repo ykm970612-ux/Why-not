@@ -47,6 +47,13 @@
     </main>
   </div>
 
+  <div class="modal-backdrop" id="region-modal" hidden>
+    <section class="region-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1">
+      <button class="modal-close" id="modal-close" type="button" aria-label="상세 정보 닫기">×</button>
+      <div id="modal-content"></div>
+    </section>
+  </div>
+
   <!-- 순서 중요: 데이터와 설정을 먼저 불러오고 main.js 를 마지막에 실행 -->
   <script src="data/data.js"></script>
   <script src="js/config.js"></script>

@@ -38,7 +38,7 @@ const TABS = {
   total: {
     label: "통합",
     scoreKey: "종합점수",
-    caption: "청년 1인가구 집중도, 주거비, 생활물가, 교통, 의료, 편의시설 9개 지표를 같은 비중으로 평균한 점수",
+    caption: "청년 집중도, 주거비, 생활환경, 교통, 의료·편의시설을 반영한 종합 점수",
     metrics: [
       { label: "주거비", key: "주거비점수", unit: "점", digits: 1, scale: 100 },
       { label: "교통", key: "교통점수", unit: "점", digits: 1, scale: 100 },
