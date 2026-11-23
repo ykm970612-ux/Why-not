@@ -47,6 +47,11 @@
     </main>
   </div>
 
-  <script type="module" src="js/main.js"></script>
+  <!-- 순서 중요: 데이터와 설정을 먼저 불러오고 main.js 를 마지막에 실행 -->
+  <script src="data/data.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/color.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>

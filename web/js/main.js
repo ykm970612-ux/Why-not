@@ -1,6 +1,4 @@
-import { TABS, DEFAULT_TAB } from "./config.js";
-import { greenAt, labelColorAt, legendGradient } from "./color.js";
-import { drawMap } from "./map.js";
+// config.js, color.js, map.js, data/data.js 를 먼저 불러온 뒤 실행된다 (index.html 의 <script> 순서).
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -19,12 +17,6 @@ function formatMetric(row, metric) {
     minimumFractionDigits: metric.digits,
     maximumFractionDigits: metric.digits,
   });
-}
-
-async function loadJson(path) {
-  const res = await fetch(path);
-  if (!res.ok) throw new Error(`${path} 불러오기 실패 (${res.status})`);
-  return res.json();
 }
 
 function rankRows(rows, key) {
@@ -115,11 +107,12 @@ function renderFocus(map) {
   renderDetail();
 }
 
-async function main() {
-  const [rows, geojson] = await Promise.all([
-    loadJson("data/districts_2025.json"),
-    loadJson("data/seoul_gu.geojson"),
-  ]);
+function main() {
+  if (!window.WEB_DATA) {
+    throw new Error("data/data.js 가 없습니다. python src/export_web_data.py 를 실행하세요.");
+  }
+  const rows = window.WEB_DATA.districts;
+  const geojson = window.WEB_DATA.boundary;
 
   const setHover = (name) => {
     state.hovered = name;
@@ -171,7 +164,9 @@ async function main() {
   render();
 }
 
-main().catch((err) => {
-  $("#detail").textContent = `데이터를 불러오지 못했어요. web 폴더에서 로컬 서버로 열어 주세요. (${err.message})`;
+try {
+  main();
+} catch (err) {
+  $("#detail").textContent = `데이터를 불러오지 못했어요. (${err.message})`;
   console.error(err);
-});
+}

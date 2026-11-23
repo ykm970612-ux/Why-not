@@ -89,7 +89,7 @@ function el(name, attrs = {}) {
   return node;
 }
 
-export function drawMap(svg, geojson, { onHover, onSelect }) {
+function drawMap(svg, geojson, { onHover, onSelect }) {
   const { project, height } = createProjection(geojson.features);
   svg.setAttribute("viewBox", `0 0 ${WIDTH} ${height.toFixed(0)}`);
 

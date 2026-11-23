@@ -2,31 +2,24 @@
 
 서울 25개 자치구의 청년 1인가구 생활 여건 점수를 지도로 보여주는 정적 웹페이지입니다.
 
-빌드 도구나 프레임워크 없이 HTML, CSS, JavaScript(ES 모듈)만 사용합니다.
+빌드 도구, 프레임워크, 서버 없이 HTML, CSS, JavaScript만 사용합니다.
 
 ---
 
 ## 실행 방법
 
-프로젝트 루트(`Why-not/`)에서 로컬 서버를 실행합니다.
+`web/index.html` 을 더블클릭해서 브라우저로 열면 됩니다. 서버를 띄울 필요가 없습니다.
 
-```text
-python -m http.server 8000 --directory web
-```
-
-브라우저에서 `http://localhost:8000` 을 엽니다.
-
-> `index.html` 을 더블클릭해서 파일로 바로 열면 데이터(JSON)를 불러오지 못합니다.
-> 브라우저가 `file://` 경로의 `fetch` 를 막기 때문에 반드시 로컬 서버로 열어야 합니다.
+데이터가 `web/data/data.js` 안에 들어 있고 `<script>` 로 불러오기 때문에, 파일로 바로 열어도(`file://`) 동작합니다.
 
 탭은 주소 뒤에 붙여서 바로 열 수도 있습니다.
 
-| 주소 | 탭 |
+| 주소 끝 | 탭 |
 |---|---|
-| `http://localhost:8000/#infra` | 인프라 (기본) |
-| `http://localhost:8000/#housing` | 주거비 |
-| `http://localhost:8000/#transit` | 교통 |
-| `http://localhost:8000/#total` | 통합 |
+| `index.html#infra` | 인프라 (기본) |
+| `index.html#housing` | 주거비 |
+| `index.html#transit` | 교통 |
+| `index.html#total` | 통합 |
 
 ---
 
@@ -38,15 +31,16 @@ web/
 ├─ css/
 │  └─ style.css        스타일
 ├─ js/
-│  ├─ main.js          데이터 불러오기, 화면 상태 관리, 렌더링
 │  ├─ config.js        탭별 점수 컬럼·설명·상세 지표 설정
+│  ├─ color.js         점수 → 초록색 단계 변환
 │  ├─ map.js           GeoJSON → SVG 지도 그리기
-│  └─ color.js         점수 → 초록색 단계 변환
-└─ data/               웹에서 읽는 데이터 (src/export_web_data.py 로 생성)
-   ├─ districts_2025.json
-   ├─ rent_trend_2021_2025.json
-   └─ seoul_gu.geojson
+│  └─ main.js          화면 상태 관리, 렌더링 (마지막에 실행)
+└─ data/
+   └─ data.js          웹에서 쓰는 데이터 전부 (src/export_web_data.py 로 생성)
 ```
+
+`index.html` 맨 아래에서 `data/data.js` → `config.js` → `color.js` → `map.js` → `main.js` 순서로 불러옵니다.
+모듈(`import`)을 쓰지 않는 일반 스크립트라서 앞 파일에서 만든 변수와 함수를 뒤 파일에서 그대로 씁니다. **이 순서를 바꾸면 안 됩니다.**
 
 ---
 
@@ -54,21 +48,22 @@ web/
 
 ```text
 data/processed/seoul_youth_final_scores_2025.csv ─┐
-data/processed/rent_trend_2021_2025.csv ──────────┼─ src/export_web_data.py ─→ web/data/*.json
+data/processed/rent_trend_2021_2025.csv ──────────┼─ src/export_web_data.py ─→ web/data/data.js
 data/raw/seoul.geojson.json ──────────────────────┘                                │
                                                                                     ▼
-                                                                    web/js/main.js 가 fetch
+                                                              window.WEB_DATA 로 main.js 에서 사용
 ```
 
-`data/` 폴더는 GitHub에 올라가지 않기 때문에, 웹에 필요한 결과만 JSON으로 바꿔 `web/data/` 에 넣어 둡니다.
+`data/` 폴더는 GitHub에 올라가지 않기 때문에, 웹에 필요한 결과만 모아 `web/data/data.js` 에 넣어 둡니다.
+파일 내용은 `window.WEB_DATA = { ... };` 한 줄이고, 그 안에 세 가지가 들어 있습니다.
 
-| 파일 | 내용 |
-|---|---|
-| `districts_2025.json` | 자치구별 원지표, 정규화 값, 분야별 점수, 종합점수, 순위 (25행) |
-| `rent_trend_2021_2025.json` | 자치구별 환산월세 구간 변화액·변화율 (현재 화면에서는 사용하지 않음) |
-| `seoul_gu.geojson` | 자치구 경계. `properties.name` 이 `자치구명` 과 같음 |
+| 키 | 원본 | 내용 |
+|---|---|---|
+| `districts` | `seoul_youth_final_scores_2025.csv` | 자치구별 원지표, 정규화 값, 분야별 점수, 종합점수, 순위 (25행) |
+| `rentTrend` | `rent_trend_2021_2025.csv` | 자치구별 환산월세 구간 변화액·변화율 (현재 화면에서는 사용하지 않음) |
+| `boundary` | `seoul.geojson.json` | 자치구 경계. `properties.name` 이 `자치구명` 과 같음 |
 
-JSON 키는 CSV 컬럼명(한글)을 그대로 사용합니다.
+각 행의 키는 CSV 컬럼명(한글)을 그대로 사용합니다. `data.js` 는 생성 파일이므로 직접 고치지 말고 스크립트로 다시 만듭니다.
 
 ### 분석 결과가 바뀌었을 때
 
@@ -142,7 +137,7 @@ python src/export_web_data.py
 // scale: 100 을 주면 값에 100을 곱해서 표시 (0~1 점수를 100점 기준으로 보여줄 때)
 ```
 
-`key` 는 `districts_2025.json` 에 있는 컬럼명이어야 합니다.
+`key` 는 `districts` 데이터(= `seoul_youth_final_scores_2025.csv`)에 있는 컬럼명이어야 합니다.
 
 ---
 

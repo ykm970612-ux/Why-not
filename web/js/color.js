@@ -44,7 +44,7 @@ function oklabToRgb([L, a, b]) {
 const STOP_LABS = STOPS.map((hex) => rgbToOklab(hexToRgb(hex)));
 
 /** t: 0(가장 낮은 점수) ~ 1(가장 높은 점수) */
-export function greenAt(t) {
+function greenAt(t) {
   const segments = STOP_LABS.length - 1;
   const pos = Math.min(Math.max(t, 0), 1) * segments;
   const i = Math.min(Math.floor(pos), segments - 1);
@@ -57,11 +57,11 @@ export function greenAt(t) {
 }
 
 /** 칠한 색 위에 올릴 글자색 */
-export function labelColorAt(t) {
+function labelColorAt(t) {
   return t > 0.55 ? "#ffffff" : "#1f3a29";
 }
 
-export function legendGradient(steps = 6) {
+function legendGradient(steps = 6) {
   const stops = Array.from({ length: steps }, (_, i) => greenAt(i / (steps - 1)));
   return `linear-gradient(to right, ${stops.join(", ")})`;
 }

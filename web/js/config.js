@@ -2,7 +2,7 @@
 
 const PER_KM2 = "개/km²";
 
-export const TABS = {
+const TABS = {
   infra: {
     label: "인프라",
     scoreKey: "인프라종합점수",
@@ -49,4 +49,4 @@ export const TABS = {
   },
 };
 
-export const DEFAULT_TAB = "infra";
+const DEFAULT_TAB = "infra";
