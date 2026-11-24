@@ -107,6 +107,147 @@ function renderFocus(map) {
   renderDetail();
 }
 
+function renderModal() {
+  const item = state.ranked.find((district) => district.name === state.selected);
+  if (!item) return;
+
+  const row = item.row;
+  const districts = window.WEB_DATA.districts;
+  const average = (key) => districts.reduce((sum, district) => sum + district[key], 0) / districts.length;
+  const formatNumber = (value, digits = 1) => Number(value).toLocaleString("ko-KR", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
+
+  const statCard = (label, value, note = "") => `
+    <div class="modal-stat">
+      <span>${label}</span>
+      <strong>${value}</strong>
+      <small>${note}</small>
+    </div>
+  `;
+
+  const compareBars = (metrics) => metrics.map(([label, key, unit, digits = 1]) => {
+    const value = row[key];
+    const mean = average(key);
+    const max = Math.max(value, mean, 0.01) * 1.13;
+
+    return `
+      <div class="compare-item">
+        <div class="compare-heading">
+          <strong>${label}</strong>
+          <span>${formatNumber(value, digits)} ${unit}</span>
+        </div>
+        <div class="compare-track"><span style="width:${value / max * 100}%"></span></div>
+        <div class="compare-track average"><span style="width:${mean / max * 100}%"></span></div>
+        <small>위: ${item.name} · 아래: 서울 25개 구 평균 ${formatNumber(mean, digits)} ${unit}</small>
+      </div>
+    `;
+  }).join("");
+
+  const scoreBars = (metrics) => metrics.map(([label, key]) => {
+    const score = row[key] * 100;
+    const width = Math.max(0, Math.min(100, score));
+    return `
+      <div class="score-row">
+        <span>${label}</span>
+        <div class="score-track"><i style="width:${width}%"></i></div>
+        <strong>${formatNumber(score)}점</strong>
+      </div>
+    `;
+  }).join("");
+
+  let content = "";
+
+  if (state.tab === "infra") {
+    const metrics = [
+      ["생활편의시설", "생활편의시설수", "개/km²"],
+      ["버스정류소", "버스정류소수", "개/km²"],
+      ["지하철역", "물리적_역수", "개/km²", 2],
+      ["일상 의료시설", "일상의료시설수", "개/km²"],
+      ["종합 의료시설", "종합의료시설수", "개/km²", 2],
+    ];
+    const strongest = [...metrics].sort((a, b) =>
+      row[b[1]] / Math.max(average(b[1]), 0.0001) - row[a[1]] / Math.max(average(a[1]), 0.0001)
+    )[0];
+
+    content = `
+      <h3>생활 인프라 비교</h3>
+      <p class="modal-intro">생활편의시설·의료시설·교통시설을 서울 평균과 비교합니다.</p>
+      <div class="compare-list">${compareBars(metrics)}</div>
+      <p class="modal-insight">서울 평균과 비교했을 때 <b>${strongest[0]}</b> 밀도가 가장 높습니다.</p>
+    `;
+  } else if (state.tab === "housing") {
+    const rent21 = row["환산월세_2021_만원"];
+    const rent25 = row["환산월세_2025_만원"];
+    const maxRent = Math.max(rent21, rent25, average("환산월세_2025_만원")) * 1.12;
+    const difference = rent25 - average("환산월세_2025_만원");
+    const rentComparison = Math.abs(difference) < 0.00001
+      ? "서울 평균과 같은 수준"
+      : `서울 평균보다 ${formatNumber(Math.abs(difference), 2)}만원 ${difference > 0 ? "높은" : "낮은"} 수준`;
+
+    content = `
+      <h3>주거비 변화</h3>
+      <p class="modal-intro">2021년과 2025년 환산월세 및 변화율</p>
+      <div class="modal-stats">
+        ${statCard("2021년 환산월세", `${formatNumber(rent21)}만원`)}
+        ${statCard("2025년 환산월세", `${formatNumber(rent25)}만원`)}
+        ${statCard("2021~2025 변화율", `${formatNumber(row["변화율_2021_2025_퍼센트"])}%`)}
+      </div>
+      <div class="rent-chart">
+        <div><span>2021</span><i style="width:${rent21 / maxRent * 100}%"></i><b>${formatNumber(rent21)}만원</b></div>
+        <div><span>2025</span><i style="width:${rent25 / maxRent * 100}%"></i><b>${formatNumber(rent25)}만원</b></div>
+      </div>
+      <div class="modal-stats">
+        ${statCard("생활물가지수", formatNumber(row["생활물가지수"]))}
+        ${statCard("서울 평균 2025 환산월세", `${formatNumber(average("환산월세_2025_만원"))}만원`, "25개 구 단순 평균")}
+      </div>
+      <p class="modal-insight">2025년 환산월세는 ${rentComparison}입니다.</p>
+    `;
+  } else if (state.tab === "transit") {
+    const metrics = [
+      ["버스정류소", "버스정류소수", "개/km²"],
+      ["지하철역", "물리적_역수", "개/km²", 2],
+    ];
+    const better = row["버스정류소수_정규화"] >= row["물리적_역수_정규화"]
+      ? "버스정류소" : "지하철역";
+
+    content = `
+      <h3>대중교통 시설 밀도</h3>
+      <p class="modal-intro">버스정류소·지하철역 밀도와 서울 평균</p>
+      <div class="compare-list">${compareBars(metrics)}</div>
+      <p class="modal-insight">두 교통 지표 중 <b>${better}</b> 점수가 더 높습니다.</p>
+    `;
+  } else {
+    const metrics = [
+      ["주거비", "주거비점수"],
+      ["교통", "교통점수"],
+      ["인프라", "인프라종합점수"],
+      ["청년 집중도", "청년집중도점수"],
+      ["생활환경", "생활환경점수"],
+    ];
+    const sorted = [...metrics].sort((a, b) => row[b[1]] - row[a[1]]);
+
+    content = `
+      <h3>종합 점수 비교</h3>
+      <p class="modal-intro">주거비·교통·인프라·청년 집중도·생활환경 점수</p>
+      <div class="score-list">${scoreBars(metrics)}</div>
+      <div class="modal-stats">
+        ${statCard("2025년 청년 1인가구", `${formatNumber(row["청년1인가구_2025"], 0)}가구`)}
+        ${statCard("청년 집중도(LQ)", formatNumber(row["청년1인가구_LQ_2025"], 2))}
+      </div>
+      <p class="modal-insight">세부 점수 중 <b>${sorted[0][0]}</b>이(가) 가장 높고 <b>${sorted.at(-1)[0]}</b>이(가) 가장 낮습니다.</p>
+    `;
+  }
+
+  $("#modal-content").innerHTML = `
+    <div class="modal-kicker">${TABS[state.tab].label} 상세 정보</div>
+    <h2 id="modal-title">${item.name} <span>${item.rank}위 / 25개 구</span></h2>
+    <div class="modal-score">${fmtScore(item.score)}<small>점</small></div>
+    ${content}
+  `;
+}
+
 function main() {
   if (!window.WEB_DATA) {
     throw new Error("data/data.js 가 없습니다. python src/export_web_data.py 를 실행하세요.");
@@ -121,6 +262,7 @@ function main() {
   const toggleSelect = (name) => {
     state.selected = state.selected === name ? null : name;
     renderFocus(map);
+    if (state.selected) { renderModal(); openModal(); } else closeModal();
   };
 
   const map = drawMap($("#map"), geojson, { onHover: setHover, onSelect: toggleSelect });
@@ -132,6 +274,7 @@ function main() {
     renderMap(map);
     renderRanking();
     renderFocus(map);
+    if (state.selected) renderModal();
   };
 
   for (const btn of document.querySelectorAll(".tab")) {
@@ -161,6 +304,12 @@ function main() {
     if (btn) toggleSelect(btn.dataset.name);
   });
 
+  const modal = $("#region-modal");
+  const closeModal = () => { modal.hidden = true; document.body.classList.remove("modal-open"); };
+  const openModal = () => { modal.hidden = false; document.body.classList.add("modal-open"); $(".region-modal").focus(); };
+  $("#modal-close").addEventListener("click", closeModal);
+  modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !modal.hidden) closeModal(); });
   render();
 }
 
