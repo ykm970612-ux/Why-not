@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>서울 자치구 청년 1인가구 생활 여건</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div class="title-block">
+        <h1>서울 자치구 청년 1인가구 생활 여건</h1>
+        <p class="subtitle">2025년 기준 · 25개 자치구 · 점수가 높을수록 진한 초록</p>
+      </div>
+
+      <nav class="tabs" role="tablist" aria-label="지표 선택">
+        <button class="tab" role="tab" data-tab="infra" aria-selected="true">인프라</button>
+        <button class="tab" role="tab" data-tab="housing" aria-selected="false">주거비</button>
+        <button class="tab" role="tab" data-tab="transit" aria-selected="false">교통</button>
+        <button class="tab" role="tab" data-tab="total" aria-selected="false">통합</button>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <section class="map-panel" aria-label="서울 자치구 지도">
+        <div class="map-head">
+          <p class="map-caption" id="tab-caption"></p>
+        </div>
+        <svg id="map" class="map" role="img" aria-label="자치구별 점수 지도"></svg>
+        <div class="legend" aria-hidden="true">
+          <span class="legend-value" id="legend-min"></span>
+          <span class="legend-bar" id="legend-bar"></span>
+          <span class="legend-value" id="legend-max"></span>
+        </div>
+      </section>
+
+      <aside class="side">
+        <section class="detail" id="detail" aria-live="polite"></section>
+
+        <section class="ranking">
+          <h2 class="section-title">순위</h2>
+          <ol class="rank-list" id="rank-list"></ol>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="region-modal" hidden>
+    <section class="region-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1">
+      <button class="modal-close" id="modal-close" type="button" aria-label="상세 정보 닫기">×</button>
+      <div id="modal-content"></div>
+    </section>
+  </div>
+
+  <!-- 순서 중요: 데이터와 설정을 먼저 불러오고 main.js 를 마지막에 실행 -->
+  <script src="data/data.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/color.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
